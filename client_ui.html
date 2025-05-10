@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTProto Secure Chat</title>
+  <!-- Add Material UI CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1976d2;
+      --secondary-color: #f50057;
+      --background-color: #f5f5f5;
+      --card-background: #ffffff;
+      --text-primary: #212121;
+      --text-secondary: #757575;
+      --border-color: #e0e0e0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+      height: 100vh;
+    }
+
+    .card {
+      background: var(--card-background);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .card-header {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-header h2 {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-header .material-icons {
+      color: var(--primary-color);
+      font-size: 28px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .input-group input,
+    .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .input-group input:focus,
+    .input-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .button:hover {
+      background-color: #1565c0;
+    }
+
+    .button:disabled {
+      background-color: var(--border-color);
+      cursor: not-allowed;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: #f8f9fa;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .chat-title {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-title .material-icons {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background-color: #fafafa;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      max-width: 70%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .message.sent {
+      background-color: #e3f2fd;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.received {
+      background-color: #f5f5f5;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .message-content .material-icons {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .message-time {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .message-time .material-icons {
+      font-size: 12px;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background-color: var(--card-background);
+      border-radius: 8px;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .input-area textarea {
+      flex: 1;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+      padding: 12px;
+      padding-right: 40px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .input-area textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .input-area .button {
+      padding: 12px;
+      border-radius: 50%;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .input-area .button:disabled {
+      background-color: var(--border-color);
+    }
+
+    .input-area .button .material-icons {
+      font-size: 20px;
+    }
+
+    .peer-list {
+      margin-top: 20px;
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+    }
+
+    .peer-item {
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .peer-item .material-icons {
+      color: var(--text-secondary);
+      font-size: 20px;
+    }
+
+    .peer-item:hover {
+      background-color: #e3f2fd;
+      transform: translateX(4px);
+    }
+
+    .peer-item.selected {
+      background-color: #e3f2fd;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .section-divider {
+      margin: 30px 0 20px;
+      border-top: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .section-divider .material-icons {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 0 10px;
+      color: var(--text-secondary);
+    }
+
+    .status {
+      padding: 12px 16px;
+      margin-top: 15px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn 0.3s ease;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .status.error {
+      background-color: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+
+    .status.success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+    }
+
+    .status .material-icons {
+      font-size: 20px;
+    }
+
+    .status.fade-out {
+      opacity: 0;
+    }
+
+    .material-icons {
+      font-size: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding: 10px;
+      }
+      
+      .card {
+        margin-bottom: 20px;
+      }
+    }
+
+    /* Add styles for handshake output */
+    #handshakeOutput {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 4px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      background: var(--border-color);
+    }
+
+    .status-indicator .material-icons {
+      font-size: 24px;
+      color: white;
+    }
+
+    .status-indicator.success {
+      background: #4caf50;
+    }
+
+    .status-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .tooltip {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 8px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+  <div class="card">
+      <div class="card-header">
+        <h2>
+          <span class="material-icons">security</span>
+          Security Setup
+        </h2>
+      </div>
+      <div class="input-group">
+    <label for="clientId">Client ID</label>
+    <input id="clientId" placeholder="e.g. user123">
+      </div>
+      <button class="button" onclick="performHandshake()">
+        <span class="material-icons">lock</span>
+        Perform Handshake
+      </button>
+      <div id="handshakeOutput" class="status"></div>
+      <div id="status" class="status"></div>
+
+      <div class="section-divider">
+        <span class="material-icons">people_alt</span>
+      </div>
+      <div class="card-header">
+        <h2>
+          <span class="material-icons">group</span>
+          Available Peers
+        </h2>
+      </div>
+      <div class="peer-list" id="peerList">
+        <!-- Peer list will be populated here -->
+      </div>
+    </div>
+
+    <div class="card chat-container">
+      <div class="chat-header">
+        <div class="chat-title" id="chatTitle">
+          <span class="material-icons">chat</span>
+          Select a peer to chat
+        </div>
+      </div>
+      <div class="messages" id="messages">
+        <!-- Messages will appear here -->
+      </div>
+      <div class="input-area">
+        <textarea id="message" placeholder="Type a secure message..." disabled></textarea>
+        <button class="button" onclick="sendSecureMessage()" disabled>
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let seqNo = 0;
+    let lastMessageId = 0;
+    let selectedPeer = null;
+    let peerMessages = {};
+    let displayedMessageIds = new Set();
+    let lastProcessedMessageId = 0;
+    let messageProcessingQueue = new Set();
+    let lastDisplayedMessageId = 0;
+    let isPolling = true;
+    let processedMessageIds = new Set();
+
+    // ECDH key pair for this user
+    let myECDHKeyPair = null;
+    let myECDHPublicKeyBase64 = null;
+
+    // Generate ECDH key pair on login
+    async function generateECDHKeyPair() {
+      myECDHKeyPair = await window.crypto.subtle.generateKey(
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey", "deriveBits"]
+      );
+      // Export public key as base64
+      const raw = await window.crypto.subtle.exportKey("raw", myECDHKeyPair.publicKey);
+      myECDHPublicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(raw)));
+    }
+
+    // Import peer's public key from base64
+    async function importPeerPublicKey(base64) {
+      const raw = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+      return await window.crypto.subtle.importKey(
+        "raw",
+        raw,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        []
+      );
+    }
+
+    // Derive shared secret (returns Uint8Array)
+    async function deriveSharedSecret(privateKey, peerPublicKey) {
+      const bits = await window.crypto.subtle.deriveBits(
+        { name: "ECDH", public: peerPublicKey },
+        privateKey,
+        256
+      );
+      return new Uint8Array(bits);
+    }
+
+    // Add CryptoJS library and wait for it to load
+    let cryptoJsReady = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+      script.onload = () => {
+        console.log("CryptoJS loaded successfully");
+        resolve();
+      };
+      script.onerror = (error) => {
+        console.error("Failed to load CryptoJS");
+        reject(error);
+      };
+      document.head.appendChild(script);
+    });
+
+    // Crypto functions
+    function getRandomBytes(size) {
+      // For Uint8Array (WebCrypto, etc)
+      return crypto.getRandomValues(new Uint8Array(size));
+    }
+    function getRandomWordArray(size) {
+      // For CryptoJS (WordArray)
+      return CryptoJS.lib.WordArray.random(size);
+    }
+
+    function padMessage(data) {
+      const blockSize = 16;
+      const paddingLength = blockSize - (data.length % blockSize);
+      const padding = new Uint8Array(paddingLength).fill(paddingLength);
+      const result = new Uint8Array(data.length + paddingLength);
+      result.set(data);
+      result.set(padding, data.length);
+      console.log("Padding details:", {
+        originalLength: data.length,
+        paddingLength: paddingLength,
+        padding: Array.from(padding),
+        finalLength: result.length,
+        finalData: Array.from(result)
+      });
+      return result;
+    }
+
+    function unpadMessage(data) {
+      if (data.length === 0) {
+        return data;
+      }
+      
+      const paddingLength = data[data.length - 1];
+      
+      // Validate padding length (must be between 1 and 16 for AES)
+      if (paddingLength > 16 || paddingLength === 0) {
+        // Try to find valid padding by checking the last few bytes
+        for (let i = 1; i <= 16; i++) {
+          const potentialPadding = data[data.length - i];
+          if (potentialPadding === i) {
+            // Verify all padding bytes are correct
+            let validPadding = true;
+            for (let j = 1; j <= i; j++) {
+              if (data[data.length - j] !== i) {
+                validPadding = false;
+                break;
+              }
+            }
+            if (validPadding) {
+              return data.slice(0, data.length - i);
+            }
+          }
+        }
+        return data;
+      }
+      
+      // Verify all padding bytes are correct
+      const paddingStart = data.length - paddingLength;
+      let validPadding = true;
+      for (let i = paddingStart; i < data.length; i++) {
+        if (data[i] !== paddingLength) {
+          validPadding = false;
+          break;
+        }
+      }
+      
+      if (validPadding) {
+        return data.slice(0, paddingStart);
+      } else {
+        return data;
+      }
+    }
+
+    function base64ToUint8Array(base64) {
+      try {
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      } catch (error) {
+        console.error("Error converting base64 to Uint8Array:", error);
+        console.error("Base64 string:", base64);
+        throw error;
+      }
+    }
+
+    // Add message key derivation according to MTProto 2.0
+    async function deriveMessageKey(authKey, messageBytes, isFromServer) {
+      try {
+        console.log("Deriving message key with:", {
+          authKeyLength: authKey.length,
+          messageBytesLength: messageBytes.length,
+          isFromServer: isFromServer,
+          authKeyPreview: Array.from(authKey.slice(0, 16)),
+          messageBytesPreview: Array.from(messageBytes)
+        });
+        
+        // Get the x byte from auth_key based on whether message is from client or server
+        const x = isFromServer ? 8 : 0;
+        
+        // Take the appropriate slice of auth_key for message_key calculation
+        const authKeySlice = authKey.slice(88 + x, 120 + x);
+        
+        // Concatenate auth_key_slice and message
+        const dataToHash = new Uint8Array(authKeySlice.length + messageBytes.length);
+        dataToHash.set(authKeySlice);
+        dataToHash.set(messageBytes, authKeySlice.length);
+        
+        // Calculate SHA256
+        const hashBuffer = await crypto.subtle.digest('SHA-256', dataToHash);
+        const hashArray = new Uint8Array(hashBuffer);
+        
+        // msg_key is the middle 128 bits of SHA256
+        const messageKey = hashArray.slice(8, 24);
+        
+        // Generate aes key and iv
+        const authKeyBytes = new Uint8Array(authKey);
+        
+        // Prepare data for key generation
+        const sha2a = new Uint8Array(52);
+        const sha2b = new Uint8Array(52);
+        const sha2c = new Uint8Array(52);
+        const sha2d = new Uint8Array(52);
+        
+        sha2a.set(messageKey, 0);
+        sha2a.set(authKeyBytes.slice(x, x + 36), 16);
+        
+        sha2b.set(authKeyBytes.slice(x + 40, x + 76), 0);
+        sha2b.set(messageKey, 36);
+        
+        sha2c.set(messageKey, 0);
+        sha2c.set(authKeyBytes.slice(x + 80, x + 116), 16);
+        
+        sha2d.set(authKeyBytes.slice(x + 120, x + 156), 0);
+        sha2d.set(messageKey, 36);
+        
+        // Calculate SHA256 for each part
+        const [aHash, bHash, cHash, dHash] = await Promise.all([
+          crypto.subtle.digest('SHA-256', sha2a),
+          crypto.subtle.digest('SHA-256', sha2b),
+          crypto.subtle.digest('SHA-256', sha2c),
+          crypto.subtle.digest('SHA-256', sha2d)
+        ]);
+        
+        // Convert to Uint8Array
+        const aArray = new Uint8Array(aHash);
+        const bArray = new Uint8Array(bHash);
+        const cArray = new Uint8Array(cHash);
+        const dArray = new Uint8Array(dHash);
+        
+        // Construct AES key and IV
+        const aesKey = new Uint8Array(32);
+        const aesIv = new Uint8Array(32);
+        
+        aesKey.set(aArray.slice(0, 8));
+        aesKey.set(bArray.slice(8, 24), 8);
+        aesKey.set(cArray.slice(24, 32), 24);
+        
+        aesIv.set(bArray.slice(0, 8));
+        aesIv.set(cArray.slice(8, 24), 8);
+        aesIv.set(dArray.slice(24, 32), 24);
+        
+        console.log("Derived keys:", {
+          messageKey: Array.from(messageKey),
+          aesKey: Array.from(aesKey),
+          aesIv: Array.from(aesIv)
+        });
+        
+        return {
+          messageKey,
+          aesKey,
+          aesIv
+        };
+      } catch (error) {
+        console.error("Error in deriveMessageKey:", error);
+        throw error;
+      }
+    }
+
+    // Update the encryption function to use derived keys
+    async function aesIgeEncrypt(plaintext, authKey, isFromServer = false) {
+      try {
+        // Wait for CryptoJS to be loaded
+        await cryptoJsReady;
+
+        // Ensure plaintext is a Uint8Array
+        if (typeof plaintext === 'string') {
+          plaintext = new TextEncoder().encode(plaintext);
+        }
+
+        console.log("Starting encryption with:", {
+          plaintextLength: plaintext.length,
+          authKeyLength: authKey.length,
+          plaintext: Array.from(plaintext)
+        });
+        console.log('ENCRYPTION: authKey (base64):', btoa(String.fromCharCode(...authKey)));
+        console.log('ENCRYPTION: authKeyBytes:', authKey);
+
+        // Get salt from localStorage if available, otherwise generate random
+        const clientId = document.getElementById('clientId').value;
+        let salt = localStorage.getItem(clientId + '_salt');
+        if (!salt) {
+          // Generate a random 8-byte salt (base64)
+          const saltBytes = getRandomBytes(8);
+          salt = btoa(String.fromCharCode(...saltBytes));
+          localStorage.setItem(clientId + '_salt', salt);
+        }
+
+        // Create message packet like Node.js implementation
+        const messagePacket = {
+          body: new TextDecoder().decode(plaintext),
+          sentAt: Math.floor(Date.now() / 1000),
+          uniqueId: generateMessageId(),
+          sequenceNumber: seqNo,
+          authorId: clientId,
+          targetId: selectedPeer,
+          salt: salt
+        };
+
+        // Convert to JSON string
+        const jsonData = JSON.stringify(messagePacket);
+        console.log("Message packet:", messagePacket);
+
+        // Generate message key (16 bytes, Uint8Array)
+        const msgKey = getRandomBytes(16);
+
+        // Derive AES key and IV using msg_key and auth_key (Uint8Array)
+        const { aesKey, aesIv } = await deriveMessageKey(authKey, msgKey, isFromServer);
+        console.log('ENCRYPTION: Derived aesKey:', Array.from(aesKey));
+        console.log('ENCRYPTION: Derived aesIv:', Array.from(aesIv));
+
+        // Convert data to CryptoJS format
+        const dataWordArray = CryptoJS.enc.Utf8.parse(jsonData);
+        const keyWordArray = CryptoJS.lib.WordArray.create(aesKey);
+        const ivWordArray = CryptoJS.lib.WordArray.create(aesIv.slice(0, 16)); // Use first 16 bytes as IV
+
+        // Encrypt with AES-CBC
+        const encrypted = CryptoJS.AES.encrypt(dataWordArray, keyWordArray, {
+          iv: ivWordArray,
+          mode: CryptoJS.mode.CBC,
+          padding: CryptoJS.pad.Pkcs7
+        });
+
+        // Convert to Uint8Array
+        const encryptedBytes = new Uint8Array(encrypted.ciphertext.sigBytes);
+        const words = encrypted.ciphertext.words;
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i];
+          const offset = i * 4;
+          encryptedBytes[offset] = (word >>> 24) & 0xff;
+          encryptedBytes[offset + 1] = (word >>> 16) & 0xff;
+          encryptedBytes[offset + 2] = (word >>> 8) & 0xff;
+          encryptedBytes[offset + 3] = word & 0xff;
+        }
+
+        console.log("Encrypted data:", {
+          length: encryptedBytes.length,
+          preview: Array.from(encryptedBytes.slice(0, 32))
+        });
+
+        return {
+          messageKey: msgKey,
+          encryptedData: encryptedBytes
+        };
+      } catch (error) {
+        console.error("Encryption error:", error);
+        throw error;
+      }
+    }
+
+    async function aesIgeDecrypt(ciphertext, authKey, messageKey, isFromServer = false) {
+      try {
+        // Wait for CryptoJS to be loaded
+        await cryptoJsReady;
+        
+        console.log("Starting decryption with:", {
+          ciphertextLength: ciphertext.length,
+          authKeyLength: authKey.length,
+          messageKeyLength: messageKey.length,
+          ciphertextPreview: Array.from(ciphertext.slice(0, 32)),
+          messageKey: Array.from(messageKey)
+        });
+        
+        // Derive AES key and IV using msg_key and auth_key
+        const { aesKey, aesIv } = await deriveMessageKey(authKey, messageKey, isFromServer);
+        console.log('DECRYPTION: Derived aesKey:', Array.from(aesKey));
+        console.log('DECRYPTION: Derived aesIv:', Array.from(aesIv));
+        
+        // Convert to CryptoJS format
+        const ciphertextWordArray = CryptoJS.lib.WordArray.create(ciphertext);
+        const keyWordArray = CryptoJS.lib.WordArray.create(aesKey);
+        const ivWordArray = CryptoJS.lib.WordArray.create(aesIv.slice(0, 16)); // Use first 16 bytes as IV
+        
+        // Decrypt with AES-CBC
+        const decrypted = CryptoJS.AES.decrypt(
+          { ciphertext: ciphertextWordArray },
+          keyWordArray,
+          {
+            iv: ivWordArray,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+          }
+        );
+        
+        // Convert to string
+        const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+        console.log("Decrypted string:", decryptedStr);
+        
+        // Parse JSON
+        const messagePacket = JSON.parse(decryptedStr);
+        console.log("Decrypted packet:", messagePacket);
+        
+        // Convert message body back to Uint8Array
+        return new TextEncoder().encode(messagePacket.body);
+      } catch (error) {
+        console.error("Decryption error:", error);
+        throw error;
+      }
+    }
+
+    function generateMessageId() {
+      // Get current Unix timestamp
+      const now = Math.floor(Date.now() / 1000);
+      
+      // Upper 32 bits for time
+      const timeBits = BigInt(now) << 32n;
+      
+      // Lower 32 bits for random
+      const randomValue = crypto.getRandomValues(new Uint32Array(1))[0];
+      const randomBits = BigInt(randomValue);
+      
+      // Combine time and random bits
+      const messageId = timeBits | randomBits;
+      
+      // Ensure it's divisible by 4
+      const adjustedMessageId = messageId - (messageId % 4n);
+      
+      return adjustedMessageId.toString();
+    }
+
+    // Add message ID validation function
+    function validateMessageId(messageId) {
+      const idBigInt = BigInt(messageId);
+      
+      // Extract timestamp from upper 32 bits
+      const timestamp = Number(idBigInt >> 32n);
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      // Check if message is within 300 seconds (5 minutes) of current time
+      if (Math.abs(currentTime - timestamp) > 300) {
+        throw new Error('Message ID timestamp too far from current time');
+      }
+      
+      // Verify divisible by 4
+      if (idBigInt % 4n !== 0n) {
+        throw new Error('Message ID must be divisible by 4');
+      }
+      
+      return true;
+    }
+
+    async function pollForMessages() {
+      try {
+        const clientId = document.getElementById('clientId').value;
+        if (!clientId || !selectedPeer) return;
+        // Use per-peer shared key (decode from base64 to Uint8Array) with sorted IDs
+        const ids = [clientId, selectedPeer].sort();
+        const authKeyBase64 = localStorage.getItem(`authkey_${ids[0]}_${ids[1]}`);
+        if (!authKeyBase64) return;
+        const authKeyBytes = Uint8Array.from(atob(authKeyBase64), c => c.charCodeAt(0));
+        const response = await fetch(`http://localhost:8080/poll_messages?client_id=${clientId}&last_msg_id=${lastMessageId}`);
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data.messages || !Array.isArray(data.messages)) {
+          return;
+        }
+        for (const msg of data.messages) {
+          if (processedMessageIds.has(msg.message_id)) {
+            continue;
+          }
+          try {
+            const encryptedData = new Uint8Array(msg.encrypted_data);
+            const messageKey = new Uint8Array(msg.message_key);
+            console.log('DECRYPTION: authKey (base64):', authKeyBase64);
+            console.log('DECRYPTION: authKeyBytes:', authKeyBytes);
+            console.log('Message data:', msg);
+            console.log('encryptedData:', encryptedData);
+            console.log('messageKey:', messageKey);
+            const { aesKey, aesIv } = await deriveMessageKey(authKeyBytes, messageKey, false);
+            console.log('DECRYPTION: Derived aesKey:', Array.from(aesKey));
+            console.log('DECRYPTION: Derived aesIv:', Array.from(aesIv));
+            const ciphertextWordArray = CryptoJS.lib.WordArray.create(encryptedData);
+            const keyWordArray = CryptoJS.lib.WordArray.create(aesKey);
+            const ivWordArray = CryptoJS.lib.WordArray.create(aesIv.slice(0, 16));
+            const decrypted = CryptoJS.AES.decrypt(
+              { ciphertext: ciphertextWordArray },
+              keyWordArray,
+              {
+                iv: ivWordArray,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+              }
+            );
+            const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+            console.log('Decrypted string:', decryptedStr);
+            let messagePacket;
+            try {
+              messagePacket = JSON.parse(decryptedStr);
+            } catch (err) {
+              console.error('JSON parse error:', err);
+              console.error('Raw decrypted string:', decryptedStr);
+              throw err;
+            }
+            console.log('Decrypted packet:', messagePacket);
+            const clientId = document.getElementById('clientId').value;
+            if (msg.from_peer === selectedPeer && msg.from !== clientId) {
+              if (!peerMessages[selectedPeer]) {
+                peerMessages[selectedPeer] = [];
+              }
+              peerMessages[selectedPeer].push({
+                content: messagePacket.body,
+                timestamp: new Date(messagePacket.sentAt * 1000),
+                isSent: false
+              });
+              displayMessagesForPeer(selectedPeer);
+            }
+            processedMessageIds.add(msg.message_id);
+            lastMessageId = Math.max(lastMessageId, msg.message_id);
+          } catch (error) {
+            console.error('Error processing message:', error);
+            console.error('Message data:', msg);
+          }
+        }
+      } catch (error) {
+        console.error('Error polling messages:', error);
+      }
+    }
+
+    // Status message handling functions
+    function showError(message) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.className = 'status error';
+      statusDiv.innerHTML = `
+        <span class="material-icons">error</span>
+        ${message}
+      `;
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        statusDiv.classList.add('fade-out');
+        setTimeout(() => {
+          statusDiv.innerHTML = '';
+          statusDiv.className = 'status';
+        }, 300);
+      }, 5000);
+    }
+
+    function showSuccess(message) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.className = 'status success';
+      statusDiv.innerHTML = `
+        <span class="material-icons">check_circle</span>
+        ${message}
+      `;
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        statusDiv.classList.add('fade-out');
+        setTimeout(() => {
+          statusDiv.innerHTML = '';
+          statusDiv.className = 'status';
+        }, 300);
+      }, 5000);
+    }
+
+    async function performHandshake() {
+      try {
+        const clientId = document.getElementById("clientId").value;
+        if (!clientId) {
+          showError("Please enter a client ID");
+          return;
+        }
+
+        // Reset status indicators
+        document.getElementById("handshakeOutput").innerHTML = `
+          <div class="status-item">
+            <div class="status-indicator" id="authStatus">
+              <span class="material-icons">key</span>
+            </div>
+            <span class="status-label">Auth Key</span>
+          </div>
+          <div class="status-item">
+            <div class="status-indicator" id="sessionStatus">
+              <span class="material-icons">fingerprint</span>
+            </div>
+            <span class="status-label">Session</span>
+          </div>
+          <div class="status-item">
+            <div class="status-indicator" id="saltStatus">
+              <span class="material-icons">enhanced_encryption</span>
+            </div>
+            <span class="status-label">Salt</span>
+          </div>
+        `;
+
+        const nonce = btoa(Math.random().toString().slice(2, 10));
+        const res1 = await fetch("http://localhost:8080/req_pq", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nonce })
+        });
+        
+        if (!res1.ok) {
+          throw new Error(`HTTP error! status: ${res1.status}`);
+        }
+        
+        const pqResp = await res1.json();
+
+        const dhValue = Math.floor(Math.random() * 100000) + 10000;
+        const g_b = dhValue.toString(16);
+
+        const res2 = await fetch("http://localhost:8080/set_client_dh_params", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nonce,
+            server_nonce: pqResp.server_nonce,
+            g_b,
+            client_id: clientId
+          })
+        });
+
+        if (!res2.ok) {
+          throw new Error(`HTTP error! status: ${res2.status}`);
+        }
+
+        const dhResp = await res2.json();
+        
+        // Store auth key and session
+        localStorage.setItem(clientId + '_authkey', dhResp.auth_key);
+        localStorage.setItem(clientId + '_session', dhResp.session_id);
+        
+        // Update status indicators with tooltips
+        document.getElementById("authStatus").className = "status-indicator success tooltip";
+        document.getElementById("authStatus").setAttribute("data-tooltip", `Auth Key: ${dhResp.auth_key.substring(0, 10)}...`);
+        
+        document.getElementById("sessionStatus").className = "status-indicator success tooltip";
+        document.getElementById("sessionStatus").setAttribute("data-tooltip", `Session ID: ${dhResp.session_id}`);
+        
+        document.getElementById("saltStatus").className = "status-indicator success tooltip";
+        document.getElementById("saltStatus").setAttribute("data-tooltip", `Salt: ${dhResp.salt}`);
+
+        showSuccess("Handshake successful!");
+        // Generate ECDH key pair and upload public key
+        await generateECDHKeyPair();
+        await fetch('http://localhost:8080/set_ecdh_pubkey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: clientId, pubkey: myECDHPublicKeyBase64 })
+        });
+        // Register as peer and start polling
+        await registerAsPeer(clientId);
+        startPeerPolling();
+      } catch (error) {
+        showError(`Handshake failed: ${error.message}`);
+      }
+    }
+
+    async function registerAsPeer(clientId) {
+      try {
+        const res = await fetch("http://localhost:8080/register_peer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ client_id: clientId })
+        });
+        
+        if (!res.ok) {
+          throw new Error("Failed to register as peer");
+        }
+      } catch (error) {
+        console.error("Error registering as peer:", error);
+      }
+    }
+
+    async function fetchPeers() {
+      try {
+        const clientId = document.getElementById("clientId").value;
+        if (!clientId) return;
+
+        const res = await fetch(`http://localhost:8080/get_peers?client_id=${clientId}`);
+        if (res.ok) {
+          const data = await res.json();
+          updatePeerList(data.peers);
+        }
+      } catch (error) {
+        console.error("Error fetching peers:", error);
+      }
+    }
+
+    function startPeerPolling() {
+      // Initial fetch
+      fetchPeers();
+      // Poll every 3 seconds
+      setInterval(fetchPeers, 3000);
+    }
+
+    function updatePeerList(peers) {
+      const peerList = document.getElementById('peerList');
+      peerList.innerHTML = '';
+      
+      peers.forEach(peer => {
+        if (peer !== document.getElementById('clientId').value) {
+          const peerItem = document.createElement('div');
+          peerItem.className = 'peer-item';
+          if (selectedPeer === peer) {
+            peerItem.classList.add('selected');
+          }
+          peerItem.innerHTML = `
+            <span class="material-icons">person</span>
+            ${peer}
+          `;
+          peerItem.onclick = () => selectPeer(peer);
+          peerList.appendChild(peerItem);
+        }
+      });
+    }
+
+    // Start polling for messages
+    let messagePollInterval = null;
+
+    // Update selectPeer to perform ECDH key exchange
+    async function selectPeer(peer) {
+      selectedPeer = peer;
+      document.getElementById('chatTitle').textContent = `Chat with ${peer}`;
+      document.getElementById('message').disabled = false;
+      document.querySelector('button[onclick="sendSecureMessage()"]').disabled = false;
+      
+      // Update peer selection UI
+      document.querySelectorAll('.peer-item').forEach(item => {
+        item.classList.remove('selected');
+        if (item.textContent === peer) {
+          item.classList.add('selected');
+        }
+      });
+
+      // Generate ECDH key pair if not already done
+      if (!myECDHKeyPair) {
+        await generateECDHKeyPair();
+        // Upload public key (should already be done after handshake, but just in case)
+        const clientId = document.getElementById('clientId').value;
+        await fetch('http://localhost:8080/set_ecdh_pubkey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: clientId, pubkey: myECDHPublicKeyBase64 })
+        });
+      }
+
+      const clientId = document.getElementById('clientId').value;
+
+      // Fetch peer's public key from the server
+      const res = await fetch(`http://localhost:8080/get_ecdh_pubkey?peer_id=${peer}`);
+      if (!res.ok) {
+        showError("Could not fetch peer's public key. Peer may not be online.");
+        return;
+      }
+      const data = await res.json();
+      const peerPubKeyBase64 = data.pubkey;
+
+      // Import peer's public key
+      const peerPubKey = await importPeerPublicKey(peerPubKeyBase64);
+
+      // Derive shared secret
+      const sharedSecret = await deriveSharedSecret(myECDHKeyPair.privateKey, peerPubKey);
+
+      // Store as per-peer auth key (base64) using sorted IDs
+      const ids = [clientId, peer].sort();
+      const sharedKeyBase64 = btoa(String.fromCharCode(...sharedSecret));
+      localStorage.setItem(`authkey_${ids[0]}_${ids[1]}`, sharedKeyBase64);
+
+      // Clear existing interval if any
+      if (messagePollInterval) {
+        clearInterval(messagePollInterval);
+      }
+
+      // Start new polling interval
+      messagePollInterval = setInterval(pollForMessages, 1000);
+      
+      // Display messages for selected peer
+      displayMessagesForPeer(peer);
+    }
+
+    function displayMessagesForPeer(peer) {
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = '';
+      
+      if (!peerMessages[peer]) {
+        peerMessages[peer] = [];
+      }
+      
+      const sortedMessages = [...peerMessages[peer]].sort((a, b) => a.timestamp - b.timestamp);
+      
+      sortedMessages.forEach(msg => {
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${msg.isSent ? 'sent' : 'received'}`;
+        
+        const timeStr = msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        messageElement.innerHTML = `
+          <div class="message-content">
+            <span class="material-icons">${msg.isSent ? 'north_east' : 'south_west'}</span>
+            <div>${msg.content}</div>
+          </div>
+          <div class="message-time">
+            <span class="material-icons">schedule</span>
+            ${timeStr}
+          </div>
+        `;
+        messagesDiv.appendChild(messageElement);
+      });
+    }
+
+    async function sendSecureMessage() {
+      try {
+        await cryptoJsReady;
+        const clientId = document.getElementById('clientId').value;
+        if (!clientId || !selectedPeer) {
+          showError("Please select a peer and ensure you have a client ID");
+          return;
+        }
+        const messageInput = document.getElementById('message');
+        const messageText = messageInput.value.trim();
+        if (!messageText) {
+          return;
+        }
+        messageInput.value = '';
+        // Use per-peer shared key (decode from base64 to Uint8Array) with sorted IDs
+        const ids = [clientId, selectedPeer].sort();
+        const authKeyBase64 = localStorage.getItem(`authkey_${ids[0]}_${ids[1]}`);
+        if (!authKeyBase64) {
+          showError("Peer's public key not found. Please establish a connection first.");
+          return;
+        }
+        const authKeyBytes = Uint8Array.from(atob(authKeyBase64), c => c.charCodeAt(0));
+        // Ensure messageText is encoded to Uint8Array
+        const messageBytes = new TextEncoder().encode(messageText);
+        const { messageKey, encryptedData } = await aesIgeEncrypt(messageBytes, authKeyBytes);
+        const messageId = generateMessageId();
+        const messageData = {
+          client_id: clientId,
+          target_peer: selectedPeer,
+          message_id: messageId,
+          seq_no: seqNo,
+          encrypted_data: Array.from(encryptedData),
+          message_key: Array.from(messageKey)
+        };
+        const response = await fetch('http://localhost:8080/secure_message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(messageData)
+        });
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+        const result = await response.json();
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        seqNo = result.seq_no;
+        lastMessageId = result.last_msg_id;
+        if (!peerMessages[selectedPeer]) {
+          peerMessages[selectedPeer] = [];
+        }
+        peerMessages[selectedPeer].push({
+          content: messageText,
+          timestamp: new Date(),
+          isSent: true
+        });
+        displayMessagesForPeer(selectedPeer);
+      } catch (error) {
+        showError(`Error sending message: ${error.message}`);
+      }
+    }
+  </script>
+</body>
+</html>

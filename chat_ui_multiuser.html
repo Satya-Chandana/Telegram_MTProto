@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MTProto Multi-User Chat</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f0f2f5; }
+    .chat-container { display: flex; height: 100vh; }
+    .users { width: 20%; background: #ffffff; border-right: 1px solid #ccc; padding: 1rem; overflow-y: auto; }
+    .users h3 { margin-top: 0; }
+    .users input { width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; }
+    .chat { flex: 1; display: flex; flex-direction: column; }
+    .messages { flex: 1; padding: 1rem; overflow-y: auto; background: #e5e7eb; }
+    .message { background: #fff; padding: 0.5rem 1rem; margin: 0.5rem 0; border-radius: 8px; }
+    .message.self { background: #d1fae5; align-self: flex-end; }
+    .input-area { display: flex; padding: 1rem; background: #fff; }
+    .input-area input { flex: 1; padding: 0.5rem; margin-right: 0.5rem; }
+    .input-area button { padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="users">
+      <h3>Client ID</h3>
+      <input id="clientId" placeholder="Enter your ID" oninput="storeId()">
+      <button onclick="handshake()">Handshake</button>
+      <hr>
+      <h3>To</h3>
+      <input id="toUser" placeholder="Recipient ID">
+    </div>
+
+    <div class="chat">
+      <div id="messages" class="messages"></div>
+<div id="encryptionLog" style="padding: 1rem; font-size: 0.9em; color: #555;"></div>
+      <div class="input-area">
+        <input id="msgBox" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function storeId() {
+      const id = document.getElementById('clientId').value;
+      if (id) localStorage.setItem('current_id', id);
+    }
+
+    async function handshake() {
+      const id = document.getElementById("clientId").value;
+      const nonce = btoa(Math.random().toString());
+      const pqResp = await fetch("http://localhost:8080/req_pq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nonce })
+      }).then(r => r.json());
+
+      const g_b = Math.floor(Math.random() * 1e6).toString(16);
+
+      const dhResp = await fetch("http://localhost:8080/set_client_dh_params", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nonce,
+          server_nonce: pqResp.server_nonce,
+          g_b,
+          client_id: id
+        })
+      }).then(r => r.json());
+
+      localStorage.setItem(id + '_authkey', dhResp.auth_key);
+      localStorage.setItem(id + '_session', dhResp.session_id);
+      console.log("Handshake complete for", id);
+    }
+
+    async function sendMessage() {
+      const from = document.getElementById('clientId').value;
+      const to = document.getElementById('toUser').value;
+      const msg = document.getElementById('msgBox').value;
+      const sessionId = localStorage.getItem(from + '_session');
+      const authKey = localStorage.getItem(from + '_authkey');
+
+      const messageId = 'msg_' + Math.random().toString(36).slice(2);
+      const encoded = btoa(`[${from} ➤ ${to}] ${msg} :KEY=${authKey}`);
+
+      // 🔽 Logging the encryption process
+      console.log("===== [Message Encryption] =====");
+      console.log("Client ID        :", from);
+      console.log("Target Peer      :", to);
+      console.log("Session ID       :", sessionId);
+      console.log("Auth Key (b64)   :", authKey);
+      console.log("Message ID       :", messageId);
+      console.log("Encrypted Payload:", encoded);
+      console.log("✅ Message encrypted and sent.");
+      console.log("================================");
+
+      const payload = {
+        client_id: to,
+        message_id: messageId,
+        session_id: sessionId,
+        encrypted_data: encoded
+      };
+
+      await fetch("http://localhost:8080/secure_message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      addMessage(msg, true, encoded);
+      document.getElementById("encryptionLog").innerText = `Encrypted message: ${encoded}`;
+      document.getElementById('msgBox').value = "";
+    }
+
+    function addMessage(text, self = false, encrypted = "") {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message' + (self ? ' self' : '');
+      msgDiv.innerHTML = `<strong>${text}</strong><br><small style="color:gray">Encrypted: ${encrypted}</small>`;
+      document.getElementById('messages').appendChild(msgDiv);
+    }
+  </script>
+</body>
+</html>
