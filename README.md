@@ -2,9 +2,9 @@
 
 This project implements a secure messaging system inspired by Telegram's MTProto 2.0 protocol. It demonstrates core security concepts including Diffie-Hellman key exchange, AES-IGE encryption, and secure message handling.
 
-## 🚀 Features Implemented
+## Features Implemented
 
-### 🔐 Security Features
+### Security Features
 - Diffie-Hellman Auth Key Exchange
 - AES-IGE Message Encryption (256-bit)
 - Message ID Validation
@@ -14,7 +14,7 @@ This project implements a secure messaging system inspired by Telegram's MTProto
 - Session Management
 - Salt Generation
 
-### 📡 Protocol Components
+### Protocol Components
 1. Handshake Protocol
    - Nonce Exchange
    - PQ Parameter Handling
@@ -33,7 +33,7 @@ This project implements a secure messaging system inspired by Telegram's MTProto
    - Proper IV Handling
    - Message Padding
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 ### Requirements
 - Python 3.7+
@@ -56,7 +56,7 @@ python server.py
 ```
 Server will start on: http://localhost:8080
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### 1. POST /req_pq
 Request:
@@ -118,7 +118,7 @@ Response:
 }
 ```
 
-## 🧠 Protocol Internals
+## Protocol Internals
 
 ### Message ID Structure
 - 64-bit integer
@@ -142,7 +142,7 @@ Response:
    - Auth key generation
    - Session management
 
-## 🛡️ Security Considerations
+## Security Considerations
 
 ### Implemented Security Features
 - Time-based message validation
@@ -151,47 +151,3 @@ Response:
 - Proper key handling
 - Message padding
 
-### Limitations (Educational Purposes)
-- Simplified DH parameters
-- Basic error handling
-- No message retry mechanism
-- No message container support
-
-## 🧑‍💻 Learning Outcomes
-
-1. Cryptographic Concepts
-   - Diffie-Hellman key exchange
-   - AES encryption
-   - Message authentication
-   - Session management
-
-2. Protocol Design
-   - Message layer implementation
-   - Sequence number handling
-   - Time-based validation
-   - Error handling
-
-3. Security Implementation
-   - Key generation
-   - Message encryption
-   - Session management
-   - Security validation
-
-## 📚 References
-- MTProto 2.0 Protocol Documentation
-- Telegram Security Guidelines
-- AES-IGE Implementation Details
-
-## 🐛 Known Issues
-- Limited error recovery
-- Basic message handling
-- Simplified security parameters
-
-## 🔜 Future Improvements
-- Message retry mechanism
-- Message container support
-- Enhanced error handling
-- Additional security features
-
-## 📝 License
-MIT License - For educational purposes only
